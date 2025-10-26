@@ -1,4 +1,4 @@
-name: Build APK
+name: Build Kivy APK
 
 on:
   push:
@@ -6,42 +6,47 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-apk:
+  build:
     runs-on: ubuntu-latest
 
-    container:
-      image: kivy/buildozer:latest
-      options: --user root
-
-    env:
-      BUILDOZER_ALLOW_ROOT: "1"
-      ANDROID_API: "33"
-      ANDROID_MINAPI: "21"
-      PYTHONPATH: "/usr/local/lib/python3.10/site-packages"
-
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Install Buildozer (system-level, no pip upgrade)
-        run: |
-          rm -rf /home/user/.venv
-          pip install buildozer==1.5.0 --break-system-packages
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
 
-      - name: Debug environment
-        run: |
-          which buildozer
-          buildozer --version
-          echo "BUILDOZER_ALLOW_ROOT=$BUILDOZER_ALLOW_ROOT"
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          python3-pip \
+          git \
+          zip \
+          unzip \
+          openjdk-17-jdk \
+          python3-setuptools \
+          python3-wheel \
+          python3-virtualenv \
+          libffi-dev \
+          libssl-dev \
+          libltdl-dev
 
-      - name: Build APK (skip root prompt)
-        run: |
-          echo "Starting clean and build..."
-          yes | BUILDOZER_ALLOW_ROOT=1 buildozer android clean || true
-          yes | BUILDOZER_ALLOW_ROOT=1 buildozer -v android debug
+        pip install --upgrade buildozer cython virtualenv
 
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: built-apk
-          path: bin/*.apk
+    - name: Build APK
+      env:
+        BUILDOZER_ALLOW_ROOT: 1
+        ANDROID_API: 33
+        ANDROID_MINAPI: 21
+      run: |
+        echo "Starting build..."
+        yes | buildozer android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: myapp-apk
+        path: bin/*.apk
