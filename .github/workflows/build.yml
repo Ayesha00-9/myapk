@@ -17,27 +17,30 @@ jobs:
       BUILDOZER_ALLOW_ROOT: "1"
       ANDROID_API: "33"
       ANDROID_MINAPI: "21"
+      PYTHONPATH: "/usr/local/lib/python3.10/site-packages"
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Reinstall Buildozer outside virtualenv
         run: |
+          # Remove possible venv
+          rm -rf /home/user/.venv
           pip install --upgrade pip
-          pip install buildozer
+          pip install buildozer==1.5.0
 
       - name: Debug environment
         run: |
-          echo "BUILDOZER_ALLOW_ROOT=$BUILDOZER_ALLOW_ROOT"
-          which python
+          which buildozer
           buildozer --version
+          echo "BUILDOZER_ALLOW_ROOT=$BUILDOZER_ALLOW_ROOT"
 
-      - name: Clean and build APK
+      - name: Build APK (skip root prompt)
         run: |
-          echo "Starting clean and build..."
-          BUILDOZER_ALLOW_ROOT=1 buildozer android clean || true
-          BUILDOZER_ALLOW_ROOT=1 buildozer -v android debug
+          echo "Starting build..."
+          yes | BUILDOZER_ALLOW_ROOT=1 buildozer android clean || true
+          yes | BUILDOZER_ALLOW_ROOT=1 buildozer -v android debug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
