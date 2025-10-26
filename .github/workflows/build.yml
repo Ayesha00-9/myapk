@@ -23,10 +23,9 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Reinstall Buildozer outside venv
+      - name: Install Buildozer (system-level, no pip upgrade)
         run: |
           rm -rf /home/user/.venv
-          pip install --upgrade pip --break-system-packages
           pip install buildozer==1.5.0 --break-system-packages
 
       - name: Debug environment
@@ -37,7 +36,7 @@ jobs:
 
       - name: Build APK (skip root prompt)
         run: |
-          echo "Starting build..."
+          echo "Starting clean and build..."
           yes | BUILDOZER_ALLOW_ROOT=1 buildozer android clean || true
           yes | BUILDOZER_ALLOW_ROOT=1 buildozer -v android debug
 
