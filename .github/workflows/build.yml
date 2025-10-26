@@ -1,4 +1,4 @@
-name: Build APK (Buildozer Docker)
+name: Build APK
 
 on:
   push:
@@ -13,34 +13,34 @@ jobs:
       image: kivy/buildozer:latest
       options: --user root
 
+    env:
+      BUILDOZER_ALLOW_ROOT: "1"
+      ANDROID_API: "33"
+      ANDROID_MINAPI: "21"
+
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Display environment info
-        run: |
-          python3 --version
-          java -version
-          echo "Working directory: $(pwd)"
-          ls -la
-
-      - name: Ensure Buildozer installed
+      - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install buildozer || true
+          pip install buildozer
+
+      - name: Debug environment
+        run: |
+          echo "BUILDOZER_ALLOW_ROOT=$BUILDOZER_ALLOW_ROOT"
+          which python
           buildozer --version
 
-      - name: Set file permissions
-        run: chmod -R a+rw .
-
-      - name: Build APK
+      - name: Clean and build APK
         run: |
-          export BUILDOZER_ALLOW_ROOT=1
-          buildozer android clean || true
-          buildozer -v android debug
+          echo "Starting clean and build..."
+          BUILDOZER_ALLOW_ROOT=1 buildozer android clean || true
+          BUILDOZER_ALLOW_ROOT=1 buildozer -v android debug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: password-apk
+          name: built-apk
           path: bin/*.apk
