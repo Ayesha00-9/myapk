@@ -1,0 +1,39 @@
+name: Build APK with Buildozer
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      ANDROIDSDK: ${{ runner.temp }}/android-sdk
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip python3-setuptools python3-wheel openjdk-17-jdk zip unzip git-core \
+                                 libncurses5 libstdc++6 libffi-dev libssl-dev
+          pip3 install --upgrade pip setuptools wheel
+      - name: Install buildozer & python-for-android
+        run: |
+          pip3 install buildozer==1.4.2
+          pip3 install cython==0.29.30
+      - name: Initialize Android SDK (may take a long time)
+        run: |
+          # this step prepares a minimal SDK; buildozer may still attempt to download other pieces.
+          mkdir -p $ANDROIDSDK
+          echo "ANDROID_SDK_ROOT set to $ANDROIDSDK"
+      - name: Run buildozer
+        run: |
+          buildozer android debug --verbose
+      - name: Upload APK artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-artifacts
+          path: bin/*.apk
