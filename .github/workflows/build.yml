@@ -13,6 +13,11 @@ jobs:
       image: kivy/buildozer:latest
       options: --user root
 
+    env:
+      BUILDOZER_ALLOW_ROOT: 1     # ✅ prevents EOF error
+      ANDROID_API: 33
+      ANDROID_MINAPI: 21
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
